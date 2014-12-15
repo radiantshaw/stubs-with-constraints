@@ -14,6 +14,33 @@ describe Post do
     end
   end
 
+  describe "#visible_to" do
+    it "returns published posts" do
+      author = create(:user)
+      viewer = create(:user)
+      create :post, user: author, published: true, title: "published_one"
+      create :post, user: author, published: true, title: "published_two"
+      create :post, user: author, published: false, title: "unpublished"
+
+      result = Post.visible_to(viewer)
+
+      expect(result.map(&:title)).
+        to match_array(%w(published_one published_two))
+    end
+
+    it "returns unpublished posts authored by the given user" do
+      other_user = create(:user)
+      viewer = create(:user)
+      create :post, user: viewer, published: false, title: "viewer_one"
+      create :post, user: viewer, published: false, title: "viewer_two"
+      create :post, user: other_user, published: false, title: "other_user"
+
+      result = Post.visible_to(viewer)
+
+      expect(result.map(&:title)).to match_array(%w(viewer_one viewer_two))
+    end
+  end
+
   around do |example|
     Timecop.freeze { example.run }
   end
